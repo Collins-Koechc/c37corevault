@@ -282,5 +282,31 @@ def search_materials():
     )
 
 # ─── FINAL SERVER EXECUTION MATRIX GATEWAY ───
+
+
+# ==========================================
+# COMRADEHUB FOOTER ROUTING ENGINE
+# ==========================================
+
+@app.route('/about')
+def about_page():
+    return render_template('about.html')
+
+@app.route('/contact')
+def contact_page():
+    return render_template('contact.html')
+
+@app.route('/terms-of-service')
+def terms_page():
+    return render_template('terms.html')
+
+@app.route('/privacy-policy')
+def privacy_page():
+    return render_template('privacy.html')
+
+@app.route('/dmca-copyright')
+def dmca_page():
+    return render_template('dmca.html')
+
 if __name__ == '__main__':
     app.run(debug=False)
