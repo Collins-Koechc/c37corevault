@@ -20,11 +20,11 @@ cloudinary.config(
     api_secret=os.environ.get('API_SECRET', 'YOUR_API_SECRET'),
     secure=True
 )
+
 # --- 2. DATABASE ROUTINE ---
 def get_db_connection():
     db_url = os.environ.get('DATABASE_URL')
     if not db_url:
-
         print("⚠️ DATABASE_URL variable missing.")
         return None
     if db_url.startswith("postgresql://"):
@@ -202,7 +202,9 @@ def admin_logout():
 def view_file(filename):
     is_admin = session.get('logged_in') == True
     
-    # --- 1. REGISTRY DATABASE LOOKUP ---
+    # 🌟 NEW INJECTION NODE: We removed the absolute block completely! 
+    # Any student can pass through this corridor to read documents on their phone screen.
+    
     cloudinary_url = None
     conn = get_db_connection()
     if not conn:
@@ -222,23 +224,36 @@ def view_file(filename):
         flash("Error: File not found in registry database.")
         return redirect('/')
         
-    # --- 2. STABLE DATA VALUE VALIDATION (No Deductions on View!) ---
+    # --- 🔒 C37 SMARTLABS: THE NUMERIC DOWNLOAD VALVE ENGINE ---
+    # Extract their current running voucher balance (Defaulting to 0 if missing)
     current_credits = session.get('download_credit', 0)
+    
+    # Evaluate if they possess a valid token balance to see the download button
+    show_download_link = is_admin or (current_credits > 0)
+    
+    # If they are a normal student and still have their voucher, deduct 1 token right now!
+    if not is_admin and current_credits > 0:
+            # --- 🔒 C37 COREVAULT: READING PASS GATE MATRIX ---
+     current_credits = session.get('download_credit', 0)
     if not isinstance(current_credits, int):
         current_credits = 0
         
-    # Evaluate if they possess a valid token balance to see the download buttons
+    # Evaluate if they possess a valid token balance to see the download button
     show_download_link = is_admin or (current_credits > 0)
+    
+    # ⚡ CRITICAL FIX: We DELETED the subtraction line from here entirely! 
+    # Reading files on the viewport canvas screen will never drain their voucher tokens.
+
         
     file_extension = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+    download_url = cloudinary_url.replace("/upload/", "/upload/fl_attachment/") if "/upload/" in cloudinary_url else cloudinary_url
     
-    # ⚡ THE EXACT INTERCEPTOR LINK SWAP: 
-    # Instead of pointing directly to Cloudinary, we route the frontend download button 
-    # straight into our secure internal valve check function to handle tokens and names!
-    download_url = url_for('download_secure_gateway', filename=filename)
-    
-    # Pass the clean parameters down to your view.html template canvas layout
+    # We pass the dynamic boolean flag down to your view.html template canvas layout
+    # 🟢 SYMMETRICAL ALIGNMENT FIX:
+        # 🟢 THE EXACT SYMMETRICAL VARIABLE FIX:
     return render_template('view.html', filename=filename, extension=file_extension, cloudinary_url=cloudinary_url, download_url=download_url, text_content="", show_download=show_download_link)
+
+
 
 @app.route('/delete/<filename>')
 def delete_file(filename):
