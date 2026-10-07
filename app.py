@@ -246,8 +246,8 @@ def view_file(filename):
 
         
     file_extension = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
-    download_url = cloudinary_url.replace("/upload/", "/upload/fl_attachment/") if "/upload/" in cloudinary_url else cloudinary_url
-    
+    download_url = f"/download/secure/{filename}"
+
     # We pass the dynamic boolean flag down to your view.html template canvas layout
     # 🟢 SYMMETRICAL ALIGNMENT FIX:
         # 🟢 THE EXACT SYMMETRICAL VARIABLE FIX:
@@ -341,3 +341,40 @@ def dmca_page():
 
 if __name__ == '__main__':
     app.run(debug=False)
+@app.route('/download/secure/<filename>')
+def download_secure_gateway(filename):
+    is_admin = session.get('logged_in') == True
+    current_credits = session.get('download_credit', 0)
+    if not isinstance(current_credits, int):
+        current_credits = 0
+
+    if not is_admin and current_credits <= 0:
+        flash("🔒 CoreVault Notice: Please upload 1 clean paper to unlock continuous offline device downloads. On-screen reading remains free!")
+        return redirect(url_for('view_file', filename=filename))
+
+    conn = get_db_connection()
+    if not conn:
+        return redirect('/')
+        
+    cloudinary_url = None
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("SELECT cloudinary_url FROM repo_files WHERE filename = %s;", (filename,))
+        res = cur.fetchone()
+        if res:
+            cloudinary_url = res['cloudinary_url']
+    conn.close()
+
+    if not cloudinary_url:
+        return redirect('/')
+
+    if not is_admin:
+        session['download_credit'] = current_credits - 1
+
+    from urllib.parse import quote
+    encoded_filename = quote(filename)
+    attachment_flag = f"upload/fl_attachment:{encoded_filename}/"
+    clean_cloudinary_download_link = cloudinary_url.replace("upload/", attachment_flag)
+
+    return redirect(clean_cloudinary_download_link)
+
+ 
