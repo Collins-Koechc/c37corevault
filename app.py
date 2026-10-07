@@ -20,11 +20,11 @@ cloudinary.config(
     api_secret=os.environ.get('API_SECRET', 'YOUR_API_SECRET'),
     secure=True
 )
-
 # --- 2. DATABASE ROUTINE ---
 def get_db_connection():
     db_url = os.environ.get('DATABASE_URL')
     if not db_url:
+
         print("⚠️ DATABASE_URL variable missing.")
         return None
     if db_url.startswith("postgresql://"):
