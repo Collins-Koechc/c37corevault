@@ -232,10 +232,12 @@
                📈 Total Site Visits: {{ total_visits }}
           </p>
         {% endif %}
-       <ul class="materials-grid" style="list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 10px; width: 100%; box-sizing: border-box; clear: both;">
+<ul class="materials-grid" style="list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; width: 100%; box-sizing: border-box; clear: both;">
+
 
             {% for file in files %}
-            <li class="materials-card" style="border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; gap: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); transition: all 0.25s ease;" onmouseover="this.style.borderColor='#C6A15B'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)';">
+                        <li class="materials-card" style="border: 1px solid #e2e8f0; border-radius: 10px; background: #ffffff; padding: 12px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.01); transition: all 0.25s ease;" onmouseover="this.style.borderColor='#C6A15B'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)';">
+
                 <div class="card-top" style="display: flex; flex-direction: column; align-items: flex-start; gap: 10px; width: 100%;">
                     {% if file.lower().endswith('.jpg') or file.lower().endswith('.jpeg') or file.lower().endswith('.png') or file.lower().endswith('.webp') %}
                         <span class="badge-ext image" style="background: rgba(198, 161, 91, 0.1); color: #C6A15B; border: 1px solid #C6A15B; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; font-family: sans-serif;">IMG DOC</span>
