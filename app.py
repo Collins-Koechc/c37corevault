@@ -73,6 +73,10 @@ def allowed_file(filename):
 def home():
     is_admin = session.get('logged_in') == True
     session['is_admin'] = is_admin
+        # Grant a brand new student 1 free offline device download voucher token
+    if 'download_credit' not in session:
+        session['download_credit'] = 1
+
     total_visits = 100
     file_views = {}
     cloudinary_urls = {}
@@ -163,8 +167,10 @@ def upload_file():
             conn.commit()
             conn.close()
             
-            session['download_credit'] = True
-            flash(f"🤝 Thank you! Material for {unit} ({year}) uploaded permanently.")
+        
+            session['download_credit'] = session.get('download_credit', 0) + 2
+            flash(f" Thank you! Material for {unit} ({year}) uploaded permanently. +2 Download Credits Added!")
+
         except Exception as e:
             flash(f"❌ Upload system error: {str(e)}")
     return redirect('/')
@@ -193,9 +199,9 @@ def admin_logout():
 @app.route('/view/<filename>')
 def view_file(filename):
     is_admin = session.get('logged_in') == True
-    if not is_admin and not session.get('download_credit'):
-        flash("📚 Upload one file to unlock downloads.")
-        return redirect('/')
+    
+    # 🌟 NEW INJECTION NODE: We removed the absolute block completely! 
+    # Any student can pass through this corridor to read documents on their phone screen.
     
     cloudinary_url = None
     conn = get_db_connection()
@@ -216,9 +222,22 @@ def view_file(filename):
         flash("Error: File not found in registry database.")
         return redirect('/')
         
+    # --- 🔒 C37 SMARTLABS: THE NUMERIC DOWNLOAD VALVE ENGINE ---
+    # Extract their current running voucher balance (Defaulting to 0 if missing)
+    current_credits = session.get('download_credit', 0)
+    
+    # Evaluate if they possess a valid token balance to see the download button
+    show_download_link = is_admin or (current_credits > 0)
+    
+    # If they are a normal student and still have their voucher, deduct 1 token right now!
+    if not is_admin and current_credits > 0:
+        session['download_credit'] = current_credits - 1
+        
     file_extension = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
     download_url = cloudinary_url.replace("/upload/", "/upload/fl_attachment/") if "/upload/" in cloudinary_url else cloudinary_url
-    return render_template('view.html', filename=filename, extension=file_extension, cloudinary_url=cloudinary_url, download_url=download_url, text_content="")
+    
+    # We pass the dynamic boolean flag down to your view.html template canvas layout
+    return render_template('view.html', filename=filename, extension=file_extension, cloudinary_url=cloudinary_url, download_url=download_url, text_content="", show_download=show_download_link)
 
 @app.route('/delete/<filename>')
 def delete_file(filename):
@@ -270,7 +289,7 @@ def search_materials():
     
     matching_files = list(cloudinary_urls.keys())
     
-    # Reuses your home layout to display search matches instantly on screen!
+   
     return render_template(
         'index.html', 
         files=matching_files, 
@@ -281,12 +300,8 @@ def search_materials():
         has_next=False
     )
 
-# ─── FINAL SERVER EXECUTION MATRIX GATEWAY ───
 
 
-# ==========================================
-# COMRADEHUB FOOTER ROUTING ENGINE
-# ==========================================
 
 @app.route('/about')
 def about_page():

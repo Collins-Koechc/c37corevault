@@ -4,16 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quick Reader - {{ filename }}</title>
-    <style>
-        :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --bg-main: #0f172a; /* Dark theme focus for comfortable student reading */
-            --bg-card: #1e293b;
-            --text-light: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: #334155;
-        }
+   <style>
+    :root {
+        --primary: #C6A15B;        
+        --primary-hover: #b08947;  
+        --bg-main: #0b0f19;      
+        --bg-card: #111625;        
+        --text-light: #f8fafc;   
+        --text-muted: #94a3b8;     
+        --border: #1e293b;        
+    }
+
 
         * {
             box-sizing: border-box;
@@ -177,21 +178,40 @@
 </head>
 <body>
 
-    <!-- Top Navigation Interface -->
-    <header class="reader-navbar">
-        <div class="file-meta">
-            <h1>{{ filename }}</h1>
-            <span class="badge">{{ extension }}</span>
+      <!-- Top Navigation Interface (Global Enterprise Profile) -->
+    <header class="reader-navbar" style="border-bottom: 2px solid var(--primary); background: #111111; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; width: 100%;">
+        <div class="file-meta" style="font-family: 'Segoe UI', system-ui, sans-serif; display: flex; align-items: center; gap: 12px; text-align: left;">
+            <!-- INJECTING THE MATCHING GLOBAL INTEL EMBLEM -->
+            <div style="color: #C6A15B; font-weight: 900; font-family: 'Segoe UI', sans-serif; font-size: 0.95rem; display: inline-flex; align-items: center; justify-content: center; border: 2px solid #C6A15B; border-radius: 50%; width: 32px; height: 32px; box-sizing: border-box; background: #111111; flex-shrink: 0; letter-spacing: -0.3px; box-shadow: 0 2px 6px rgba(198, 161, 91, 0.15);">
+                C37
+            </div>
+            <div>
+                <h1 style="font-weight: 850; letter-spacing: -0.3px; color: #ffffff; font-size: 1.05rem; margin: 0 0 2px 0; line-height: 1.1;">
+                    C37 <span style="color: var(--primary);">CoreVault</span> Reader
+                </h1>
+                <span class="badge" style="background: rgba(198, 161, 91, 0.15); color: var(--primary); border: 1px solid var(--primary); font-size: 0.68rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; display: inline-block; text-transform: uppercase; letter-spacing: 0.02em;">
+                    {{ extension }} • {{ filename[:25] }}{% if filename|length > 25 %}...{% endif %}
+                </span>
+            </div>
         </div>
-        <div class="nav-actions">
+
+        <div class="nav-actions" style="display: flex; gap: 8px;">
             <a href="/" class="btn btn-close" title="Back to Registry">
                 <span>⬅️</span> <span class="btn-text">Library</span>
             </a>
-            <a href="{{ download_url }}" class="btn btn-dl" title="Save to Device">
-                <span>📥</span> <span class="btn-text">Download</span>
-            </a>
+            <!-- SECURE COREVAULT HEADER VALVE CHECK -->
+            {% if show_download %}
+                <a href="{{ download_url }}" class="btn btn-dl" title="Save to Device">
+                    <span>📥</span> <span class="btn-text">Download</span>
+                </a>
+            {% else %}
+                <span class="btn btn-close" title="Vault Locked" style="cursor: not-allowed; opacity: 0.5; display: inline-flex; align-items: center; gap: 6px;" onclick="alert('🔒 CoreVault Notice: Free download token used! Upload 1 paper to clear your balance.');">
+                    <span>🔒</span> <span class="btn-text">Locked</span>
+                </span>
+            {% endif %}
         </div>
     </header>
+
 
     <!-- Reading Mode Workspace -->
     <main class="reader-workspace">
@@ -219,9 +239,18 @@
                 
                 <h3>Open Material</h3>
                 <p>This <strong>.{{ extension }}</strong> revision document requires a native reader app. Grab it instantly below to study.</p>
-                <a href="{{ download_url }}" class="btn btn-dl" style="width: 100%; justify-content: center;">
-                    📥 Download Revision File
-                </a>
+                                <!-- SECURE COREVAULT INTERACTIVE DECK VALVE -->
+                {% if show_download %}
+                    <a href="{{ download_url }}" class="btn btn-dl" style="width: 100%; justify-content: center;">
+                        📥 Download Revision File
+                    </a>
+                {% else %}
+                    <div style="background: rgba(198, 161, 91, 0.1); border: 1px dashed #C6A15B; padding: 12px; border-radius: 6px; text-align: left; margin-top: 10px;">
+                        <span style="font-size: 0.82rem; font-weight: 700; color: #C6A15B; display: block; margin-bottom: 4px;">🔒 Device Storage Lock Active</span>
+                        <span style="font-size: 0.75rem; color: #94a3b8; line-height: 1.4; display: block;">You have exhausted your free sample voucher link. Drop 1 paper on our homepage to instantly add +2 permanent offline downloads. On-screen reading remains free!</span>
+                    </div>
+                {% endif %}
+
             </div>
         {% endif %}
 
