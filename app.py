@@ -197,6 +197,7 @@ def admin_logout():
     session.pop('is_admin', None)
     flash("Logged out.")
     return redirect('/')
+
 @app.route('/view/<filename>')
 def view_file(filename):
     is_admin = session.get('logged_in') == True
@@ -230,9 +231,13 @@ def view_file(filename):
     show_download_link = is_admin or (current_credits > 0)
         
     file_extension = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
-    download_url = cloudinary_url.replace("/upload/", "/upload/fl_attachment/") if "/upload/" in cloudinary_url else cloudinary_url
     
-    # Pass the clean boolean parameter down to your view.html template canvas layout
+    # ⚡ THE EXACT INTERCEPTOR LINK SWAP: 
+    # Instead of pointing directly to Cloudinary, we route the frontend download button 
+    # straight into our secure internal valve check function to handle tokens and names!
+    download_url = url_for('download_secure_gateway', filename=filename)
+    
+    # Pass the clean parameters down to your view.html template canvas layout
     return render_template('view.html', filename=filename, extension=file_extension, cloudinary_url=cloudinary_url, download_url=download_url, text_content="", show_download=show_download_link)
 
 @app.route('/delete/<filename>')
