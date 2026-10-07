@@ -369,10 +369,12 @@ def download_secure_gateway(filename):
 
     if not is_admin:
         session['download_credit'] = current_credits - 1
-
     from urllib.parse import quote
-    encoded_filename = quote(filename)
+    base_name = filename.rsplit('.', 1)[0] if '.' in filename else filename
+    encoded_filename = quote(base_name)
     attachment_flag = f"upload/fl_attachment:{encoded_filename}/"
+    
+    # 🟢 KEEP THIS 4TH LINE EXACTLY AS IT IS:
     clean_cloudinary_download_link = cloudinary_url.replace("upload/", attachment_flag)
 
     return redirect(clean_cloudinary_download_link)
