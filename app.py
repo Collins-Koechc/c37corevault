@@ -197,14 +197,11 @@ def admin_logout():
     session.pop('is_admin', None)
     flash("Logged out.")
     return redirect('/')
-
 @app.route('/view/<filename>')
 def view_file(filename):
     is_admin = session.get('logged_in') == True
     
-    # 🌟 NEW INJECTION NODE: We removed the absolute block completely! 
-    # Any student can pass through this corridor to read documents on their phone screen.
-    
+    # --- 1. REGISTRY DATABASE LOOKUP ---
     cloudinary_url = None
     conn = get_db_connection()
     if not conn:
@@ -224,31 +221,18 @@ def view_file(filename):
         flash("Error: File not found in registry database.")
         return redirect('/')
         
-    # --- 🔒 C37 SMARTLABS: THE NUMERIC DOWNLOAD VALVE ENGINE ---
-    # Extract their current running voucher balance (Defaulting to 0 if missing)
+    # --- 2. STABLE DATA VALUE VALIDATION (No Deductions on View!) ---
     current_credits = session.get('download_credit', 0)
-    
-    # Evaluate if they possess a valid token balance to see the download button
-    show_download_link = is_admin or (current_credits > 0)
-    
-    # If they are a normal student and still have their voucher, deduct 1 token right now!
-    if not is_admin and current_credits > 0:
-            # --- 🔒 C37 COREVAULT: READING PASS GATE MATRIX ---
-     current_credits = session.get('download_credit', 0)
     if not isinstance(current_credits, int):
         current_credits = 0
         
-    # Evaluate if they possess a valid token balance to see the download button
+    # Evaluate if they possess a valid token balance to see the download buttons
     show_download_link = is_admin or (current_credits > 0)
-    
-    # ⚡ CRITICAL FIX: We DELETED the subtraction line from here entirely! 
-    # Reading files on the viewport canvas screen will never drain their voucher tokens.
-
         
     file_extension = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
     download_url = cloudinary_url.replace("/upload/", "/upload/fl_attachment/") if "/upload/" in cloudinary_url else cloudinary_url
     
-    # We pass the dynamic boolean flag down to your view.html template canvas layout
+    # Pass the clean boolean parameter down to your view.html template canvas layout
     return render_template('view.html', filename=filename, extension=file_extension, cloudinary_url=cloudinary_url, download_url=download_url, text_content="", show_download=show_download_link)
 
 @app.route('/delete/<filename>')
