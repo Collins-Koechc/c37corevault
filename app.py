@@ -234,7 +234,7 @@ def view_file(filename):
     # If they are a normal student and still have their voucher, deduct 1 token right now!
     if not is_admin and current_credits > 0:
             # --- 🔒 C37 COREVAULT: READING PASS GATE MATRIX ---
-    current_credits = session.get('download_credit', 0)
+     current_credits = session.get('download_credit', 0)
     if not isinstance(current_credits, int):
         current_credits = 0
         
