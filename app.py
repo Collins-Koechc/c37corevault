@@ -74,8 +74,10 @@ def home():
     is_admin = session.get('logged_in') == True
     session['is_admin'] = is_admin
         # Grant a brand new student 1 free offline device download voucher token
-    if 'download_credit' not in session:
+      # Ensure their session wallet voucher ledger is initialized to a clean number
+    if 'download_credit' not in session or not isinstance(session.get('download_credit'), int):
         session['download_credit'] = 1
+
 
     total_visits = 100
     file_views = {}
@@ -231,7 +233,17 @@ def view_file(filename):
     
     # If they are a normal student and still have their voucher, deduct 1 token right now!
     if not is_admin and current_credits > 0:
-        session['download_credit'] = current_credits - 1
+            # --- 🔒 C37 COREVAULT: READING PASS GATE MATRIX ---
+    current_credits = session.get('download_credit', 0)
+    if not isinstance(current_credits, int):
+        current_credits = 0
+        
+    # Evaluate if they possess a valid token balance to see the download button
+    show_download_link = is_admin or (current_credits > 0)
+    
+    # ⚡ CRITICAL FIX: We DELETED the subtraction line from here entirely! 
+    # Reading files on the viewport canvas screen will never drain their voucher tokens.
+
         
     file_extension = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
     download_url = cloudinary_url.replace("/upload/", "/upload/fl_attachment/") if "/upload/" in cloudinary_url else cloudinary_url
