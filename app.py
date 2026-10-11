@@ -193,21 +193,29 @@ def admin_logout():
 @app.route('/view/<filename>')
 def view_file(filename):
     is_admin = session.get('logged_in') == True
-    if not is_admin and not session.get('download_credit'):
+    # Clean check: if they have credits or are admin, they pass the gateway filter
+    has_credit = session.get('download_credit') == True
+    
+    if not is_admin and not has_credit:
         flash("📚 Upload one file to unlock downloads.")
         return redirect('/')
     
     cloudinary_url = None
+    file_id = 1  # Standard fallback default indicator
+    
     conn = get_db_connection()
     if not conn:
         flash("❌ Database error: Could not fetch file resource links.")
         return redirect('/')
         
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
-        cur.execute("SELECT cloudinary_url FROM repo_files WHERE filename = %s;", (filename,))
+        # 📡 UPGRADED: Pulls both the unique asset ID and storage link from your registry table rows
+        cur.execute("SELECT id, cloudinary_url FROM repo_files WHERE filename = %s;", (filename,))
         res = cur.fetchone()
         if res:
             cloudinary_url = res['cloudinary_url']
+            # Safely extracts your database row ID if it exists, otherwise preserves the fallback
+            file_id = res.get('id', 1)
         cur.execute("UPDATE repo_files SET views = views + 1 WHERE filename = %s;", (filename,))
     conn.commit()
     conn.close()
@@ -218,7 +226,21 @@ def view_file(filename):
         
     file_extension = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
     download_url = cloudinary_url.replace("/upload/", "/upload/fl_attachment/") if "/upload/" in cloudinary_url else cloudinary_url
-    return render_template('view.html', filename=filename, extension=file_extension, cloudinary_url=cloudinary_url, download_url=download_url, text_content="")
+    
+    # Determines if the frontend action elements should show active or locked
+    show_download = is_admin or has_credit
+    
+    # 🟢 FIXED: Explicitly streams all variables directly down your template pipelines!
+    return render_template(
+        'view.html', 
+        filename=filename, 
+        extension=file_extension, 
+        cloudinary_url=cloudinary_url, 
+        download_url=download_url, 
+        text_content="",
+        show_download=show_download,
+        material_id=file_id
+    )
 
 @app.route('/delete/<filename>')
 def delete_file(filename):
