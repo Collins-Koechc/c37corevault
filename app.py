@@ -192,13 +192,17 @@ def admin_logout():
 
 @app.route('/view/<filename>')
 def view_file(filename):
+    # 🕵️‍♂️ RULE 1: ON-SCREEN READING IS ALWAYS FREE. 
+    # We remove the restrictive redirect at the top so anyone can view the document canvas!
     is_admin = session.get('logged_in') == True
-    # Clean check: if they have credits or are admin, they pass the gateway filter
-    has_credit = session.get('download_credit') == True
     
-    if not is_admin and not has_credit:
-        flash("📚 Upload one file to unlock downloads.")
-        return redirect('/')
+    # Track the active download voucher balance from the student's cookie session array
+    if 'downloads_used' not in session:
+        session['downloads_used'] = 0
+        
+    # Standard allowance: We grant them 1 free sample download voucher link upon arrival
+    uploaded_bonus = 2 if session.get('download_credit') == True else 0
+    allowed_downloads = 1 + uploaded_bonus
     
     cloudinary_url = None
     file_id = 1  # Standard fallback default indicator
@@ -209,12 +213,11 @@ def view_file(filename):
         return redirect('/')
         
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
-        # 📡 UPGRADED: Pulls both the unique asset ID and storage link from your registry table rows
+        # 📡 Streams BOTH the unique database serial ID and storage link from your registry table rows
         cur.execute("SELECT id, cloudinary_url FROM repo_files WHERE filename = %s;", (filename,))
         res = cur.fetchone()
         if res:
             cloudinary_url = res['cloudinary_url']
-            # Safely extracts your database row ID if it exists, otherwise preserves the fallback
             file_id = res.get('id', 1)
         cur.execute("UPDATE repo_files SET views = views + 1 WHERE filename = %s;", (filename,))
     conn.commit()
@@ -227,10 +230,14 @@ def view_file(filename):
     file_extension = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
     download_url = cloudinary_url.replace("/upload/", "/upload/fl_attachment/") if "/upload/" in cloudinary_url else cloudinary_url
     
-    # Determines if the frontend action elements should show active or locked
-    show_download = is_admin or has_credit
-    
-    # 🟢 FIXED: Explicitly streams all variables directly down your template pipelines!
+    # 🎯 RULE 2: DOWNLOAD GATE IS CONTROLLED BY TOKEN RATIOS
+    # Unlocks download if they are the admin OR if their usage remains below their allowed voucher balance
+    if is_admin or (session['downloads_used'] < allowed_downloads):
+        show_download = True
+    else:
+        show_download = False
+        
+    # Explicitly streams all tracking variables right down your template pipeline layout
     return render_template(
         'view.html', 
         filename=filename, 
