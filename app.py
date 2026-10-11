@@ -192,8 +192,6 @@ def admin_logout():
 
 @app.route('/view/<filename>')
 def view_file(filename):
-    # 🕵️‍♂️ RULE 1: ON-SCREEN READING IS ALWAYS FREE. 
-    # We remove the restrictive redirect at the top so anyone can view the document canvas!
     is_admin = session.get('logged_in') == True
     
     # Track the active download voucher balance from the student's cookie session array
@@ -205,7 +203,6 @@ def view_file(filename):
     allowed_downloads = 1 + uploaded_bonus
     
     cloudinary_url = None
-    file_id = 1  # Standard fallback default indicator
     
     conn = get_db_connection()
     if not conn:
@@ -213,12 +210,11 @@ def view_file(filename):
         return redirect('/')
         
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
-        # 📡 Streams BOTH the unique database serial ID and storage link from your registry table rows
-        cur.execute("SELECT id, cloudinary_url FROM repo_files WHERE filename = %s;", (filename,))
+        # 🟢 FIXED: Removed the missing 'id' column to perfectly align with your Postgres schema matrix
+        cur.execute("SELECT cloudinary_url FROM repo_files WHERE filename = %s;", (filename,))
         res = cur.fetchone()
         if res:
             cloudinary_url = res['cloudinary_url']
-            file_id = res.get('id', 1)
         cur.execute("UPDATE repo_files SET views = views + 1 WHERE filename = %s;", (filename,))
     conn.commit()
     conn.close()
@@ -230,14 +226,13 @@ def view_file(filename):
     file_extension = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
     download_url = cloudinary_url.replace("/upload/", "/upload/fl_attachment/") if "/upload/" in cloudinary_url else cloudinary_url
     
-    # 🎯 RULE 2: DOWNLOAD GATE IS CONTROLLED BY TOKEN RATIOS
-    # Unlocks download if they are the admin OR if their usage remains below their allowed voucher balance
+    # DOWNLOAD GATE CONTROLLED BY TOKEN RATIOS
     if is_admin or (session['downloads_used'] < allowed_downloads):
         show_download = True
     else:
         show_download = False
         
-    # Explicitly streams all tracking variables right down your template pipeline layout
+    # Explicitly streams all variables directly down your template pipelines!
     return render_template(
         'view.html', 
         filename=filename, 
@@ -246,7 +241,7 @@ def view_file(filename):
         download_url=download_url, 
         text_content="",
         show_download=show_download,
-        material_id=file_id
+        material_id=filename # Uses filename as the unique parameter row indicator safely!
     )
 
 @app.route('/delete/<filename>')
