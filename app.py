@@ -7,7 +7,7 @@ import cloudinary.uploader
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 
 app = Flask(__name__)
-# STORAGE SECURITY GATE: Hard limit uploads to 5MB max to prevent storage abuse
+# STORAGE SECURITY GATE: Hard limit uploads to 15MB max to prevent storage abuse
 app.config['MAX_CONTENT_LENGTH'] = 15 * 1024 * 1024
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'collins77.')
 
@@ -21,11 +21,11 @@ cloudinary.config(
     secure=True
 )
 
-# --- 2. DATABASE ROUTINE ---
+#  2. DATABASE ROUTINE ---
 def get_db_connection():
     db_url = os.environ.get('DATABASE_URL')
     if not db_url:
-        print("⚠️ DATABASE_URL variable missing.")
+        print(" DATABASE_URL variable missing.")
         return None
     if db_url.startswith("postgresql://"):
         db_url = db_url.replace("postgresql://", "postgres://", 1)
@@ -33,7 +33,7 @@ def get_db_connection():
         conn = psycopg2.connect(db_url)
         return conn
     except Exception as e:
-        print(f"❌ Database connection failed: {str(e)}")
+        print(f" Database connection failed: {str(e)}")
         return None
 
 def init_db():
@@ -56,9 +56,9 @@ def init_db():
             cur.execute("INSERT INTO analytics (key, value) VALUES ('total_visits', 100) ON CONFLICT DO NOTHING;")
         conn.commit()
         conn.close()
-        print("✅ DATABASE INITIALIZED: Connected successfully.")
+        print(" DATABASE INITIALIZED: Connected successfully.")
     else:
-        print("❌ DATABASE INITIALIZATION FAILED: Check your Render Environment variables!")
+        print(" DATABASE INITIALIZATION FAILED: Check your Render Environment variables!")
 
 try:
     init_db()
@@ -73,17 +73,11 @@ def allowed_file(filename):
 def home():
     is_admin = session.get('logged_in') == True
     session['is_admin'] = is_admin
-        # Grant a brand new student 1 free offline device download voucher token
-      # Ensure their session wallet voucher ledger is initialized to a clean number
-    if 'download_credit' not in session or not isinstance(session.get('download_credit'), int):
-        session['download_credit'] = 1
-
-
     total_visits = 100
     file_views = {}
     cloudinary_urls = {}
     
-    # 🧭 Secure Pagination Query Param Handling
+    #  Secure Pagination Query Param Handling
     try:
         page = int(request.args.get('page', 1))
         if page < 1: page = 1
@@ -151,7 +145,7 @@ def upload_file():
         try:
             conn = get_db_connection()
             if not conn:
-                flash("❌ Upload failed: Could not establish secure cloud database connection.")
+                flash(" Upload failed: Could not establish secure cloud database connection.")
                 return redirect('/')
 
             upload_result = cloudinary.uploader.upload(
@@ -169,10 +163,8 @@ def upload_file():
             conn.commit()
             conn.close()
             
-        
-            session['download_credit'] = session.get('download_credit', 0) + 2
-            flash(f" Thank you! Material for {unit} ({year}) uploaded permanently. +2 Download Credits Added!")
-
+            session['download_credit'] = True
+            flash(f"🤝 Thank you! Material for {unit} ({year}) uploaded permanently.")
         except Exception as e:
             flash(f"❌ Upload system error: {str(e)}")
     return redirect('/')
@@ -201,9 +193,9 @@ def admin_logout():
 @app.route('/view/<filename>')
 def view_file(filename):
     is_admin = session.get('logged_in') == True
-    
-    # 🌟 NEW INJECTION NODE: We removed the absolute block completely! 
-    # Any student can pass through this corridor to read documents on their phone screen.
+    if not is_admin and not session.get('download_credit'):
+        flash("📚 Upload one file to unlock downloads.")
+        return redirect('/')
     
     cloudinary_url = None
     conn = get_db_connection()
@@ -224,36 +216,9 @@ def view_file(filename):
         flash("Error: File not found in registry database.")
         return redirect('/')
         
-    # --- 🔒 C37 SMARTLABS: THE NUMERIC DOWNLOAD VALVE ENGINE ---
-    # Extract their current running voucher balance (Defaulting to 0 if missing)
-    current_credits = session.get('download_credit', 0)
-    
-    # Evaluate if they possess a valid token balance to see the download button
-    show_download_link = is_admin or (current_credits > 0)
-    
-    # If they are a normal student and still have their voucher, deduct 1 token right now!
-    if not is_admin and current_credits > 0:
-            # --- 🔒 C37 COREVAULT: READING PASS GATE MATRIX ---
-     current_credits = session.get('download_credit', 0)
-    if not isinstance(current_credits, int):
-        current_credits = 0
-        
-    # Evaluate if they possess a valid token balance to see the download button
-    show_download_link = is_admin or (current_credits > 0)
-    
-    # ⚡ CRITICAL FIX: We DELETED the subtraction line from here entirely! 
-    # Reading files on the viewport canvas screen will never drain their voucher tokens.
-
-        
     file_extension = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
-    download_url = f"/download/secure/{filename}"
-
-    # We pass the dynamic boolean flag down to your view.html template canvas layout
-    # 🟢 SYMMETRICAL ALIGNMENT FIX:
-        # 🟢 THE EXACT SYMMETRICAL VARIABLE FIX:
-    return render_template('view.html', filename=filename, extension=file_extension, cloudinary_url=cloudinary_url, download_url=download_url, text_content="", show_download=show_download_link)
-
-
+    download_url = cloudinary_url.replace("/upload/", "/upload/fl_attachment/") if "/upload/" in cloudinary_url else cloudinary_url
+    return render_template('view.html', filename=filename, extension=file_extension, cloudinary_url=cloudinary_url, download_url=download_url, text_content="")
 
 @app.route('/delete/<filename>')
 def delete_file(filename):
@@ -276,7 +241,7 @@ def search_materials():
     is_admin = session.get('logged_in') == True
     session['is_admin'] = is_admin
     
-    # 🔍 Extract the search term entered by the student
+    #  Extract the search term entered by the student
     query = request.args.get('query', '').strip()
     
     if not query:
@@ -341,42 +306,3 @@ def dmca_page():
 
 if __name__ == '__main__':
     app.run(debug=False)
-@app.route('/download/secure/<filename>')
-def download_secure_gateway(filename):
-    is_admin = session.get('logged_in') == True
-    current_credits = session.get('download_credit', 0)
-    if not isinstance(current_credits, int):
-        current_credits = 0
-
-    if not is_admin and current_credits <= 0:
-        flash("🔒 CoreVault Notice: Please upload 1 clean paper to unlock continuous offline device downloads. On-screen reading remains free!")
-        return redirect(url_for('view_file', filename=filename))
-
-    conn = get_db_connection()
-    if not conn:
-        return redirect('/')
-        
-    cloudinary_url = None
-    with conn.cursor(cursor_factory=RealDictCursor) as cur:
-        cur.execute("SELECT cloudinary_url FROM repo_files WHERE filename = %s;", (filename,))
-        res = cur.fetchone()
-        if res:
-            cloudinary_url = res['cloudinary_url']
-    conn.close()
-
-    if not cloudinary_url:
-        return redirect('/')
-
-    if not is_admin:
-        session['download_credit'] = current_credits - 1
-    from urllib.parse import quote
-    base_name = filename.rsplit('.', 1)[0] if '.' in filename else filename
-    encoded_filename = quote(base_name)
-    attachment_flag = f"upload/fl_attachment:{encoded_filename}/"
-    
-    # 🟢 KEEP THIS 4TH LINE EXACTLY AS IT IS:
-    clean_cloudinary_download_link = cloudinary_url.replace("upload/", attachment_flag)
-
-    return redirect(clean_cloudinary_download_link)
-
- 
