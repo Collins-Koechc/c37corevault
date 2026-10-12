@@ -224,8 +224,10 @@ def view_file(filename):
         return redirect('/')
         
     file_extension = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
-    download_url = cloudinary_url.replace("/upload/", "/upload/fl_attachment/") if "/upload/" in cloudinary_url else cloudinary_url
-    
+       # 🟢 C37 SMARTLABS: PRESERVE ORIGINAL FILENAME WITH ABSOLUTE ZERO CRASH RISK
+    clean_title = filename.rsplit('.', 1)[0] if '.' in filename else filename
+    download_url = cloudinary_url.replace("/upload/", f"/upload/fl_attachment:{clean_title}/") if "/upload/" in cloudinary_url else cloudinary_url
+
     # DOWNLOAD GATE CONTROLLED BY TOKEN RATIOS
     if is_admin or (session['downloads_used'] < allowed_downloads):
         show_download = True
@@ -330,3 +332,9 @@ def dmca_page():
 
 if __name__ == '__main__':
     app.run(debug=False)
+
+
+
+
+
+
